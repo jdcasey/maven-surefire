@@ -27,6 +27,7 @@ package org.apache.maven.surefire.booter;
  */
 public interface BooterConstants
 {
+    String ONE_OFF_PROPERTY_PREFIX = "oneOff";
     String INCLUDES_PROPERTY_PREFIX = "includes";
     String EXCLUDES_PROPERTY_PREFIX = "excludes";
     String USESYSTEMCLASSLOADER = "useSystemClassLoader";

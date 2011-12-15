@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.maven.surefire.OneOffTestClassFilter;
+
 /**
  * Scans directories looking for tests.
  * 
@@ -48,13 +50,16 @@ public class DefaultDirectoryScanner
 
     private final List excludes;
 
+    private final List oneOffTests;
+
     private final List classesSkippedByValidation = new ArrayList();
 
-    public DefaultDirectoryScanner( File basedir, List includes, List excludes )
+    public DefaultDirectoryScanner( File basedir, List includes, List excludes, List oneOffTests )
     {
         this.basedir = basedir;
         this.includes = includes;
         this.excludes = excludes;
+        this.oneOffTests = oneOffTests;
     }
 
     public TestsToRun locateTestClasses( ClassLoader classLoader, ScannerFilter scannerFilter )
@@ -62,11 +67,20 @@ public class DefaultDirectoryScanner
         String[] testClassNames = collectTests();
         List result = new ArrayList();
 
+        String[] allowed = oneOffTests == null ? new String[0] : processIncludesExcludes( oneOffTests );
+        OneOffTestClassFilter oneOffFilter = new OneOffTestClassFilter( allowed );
+
         for ( int i = 0; i < testClassNames.length; i++ )
         {
             String className = testClassNames[i];
 
             Class testClass = loadClass( classLoader, className );
+
+            if ( !oneOffFilter.accept( testClass ) )
+            {
+                // FIXME: Log this somehow!
+                continue;
+            }
 
             if ( scannerFilter == null || scannerFilter.accept( testClass ) )
             {
