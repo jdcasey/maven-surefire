@@ -391,12 +391,11 @@ public abstract class AbstractSurefireMojo
                 setFailIfNoTests( Boolean.TRUE );
             }
 
-            failIfNoTests = getFailIfNoTests() != null && getFailIfNoTests();
-
             List<String> includes = getIncludeList();
             List<String> excludes = getExcludeList();
-            directoryScannerParameters = new DirectoryScannerParameters( getTestClassesDirectory(), includes, excludes,
-                                                                         failIfNoTests,
+            List<String> specificTests = getSpecificTests();
+            directoryScannerParameters =
+                new DirectoryScannerParameters( getTestClassesDirectory(), includes, excludes, specificTests,
                                                                          getRunOrder() );
         }
 
@@ -538,20 +537,7 @@ public abstract class AbstractSurefireMojo
 
             // FooTest -> **/FooTest.java
 
-            includes = new ArrayList<String>();
-
-            String[] testRegexes = StringUtils.split( getTest(), "," );
-
-            for ( String testRegex : testRegexes )
-            {
-                if ( testRegex.endsWith( ".java" ) )
-                {
-                    testRegex = testRegex.substring( 0, testRegex.length() - 5 );
-                }
-                // Allow paths delimited by '.' or '/'
-                testRegex = testRegex.replace( '.', '/' );
-                includes.add( "**/" + testRegex + ".java" );
-            }
+            includes = getSpecificTests();
         }
         else
         {
@@ -565,6 +551,31 @@ public abstract class AbstractSurefireMojo
             }
         }
         return includes;
+    }
+
+    private List<String> getSpecificTests()
+    {
+        if ( !isSpecificTestSpecified() )
+        {
+            return Collections.emptyList();
+        }
+
+        List<String> specificTests = new ArrayList<String>();
+        String[] testRegexes = StringUtils.split( getTest(), "," );
+
+        for ( int i = 0; i < testRegexes.length; i++ )
+        {
+            String testRegex = testRegexes[i];
+            if ( testRegex.endsWith( ".java" ) )
+            {
+                testRegex = testRegex.substring( 0, testRegex.length() - 5 );
+            }
+            // Allow paths delimited by '.' or '/'
+            testRegex = testRegex.replace( '.', '/' );
+            specificTests.add( "**/" + testRegex + ".java" );
+        }
+
+        return specificTests;
     }
 
     private Artifact getTestNgArtifact()
