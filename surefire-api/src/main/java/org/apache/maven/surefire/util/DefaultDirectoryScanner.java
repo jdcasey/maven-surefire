@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.maven.surefire.OneOffTestClassFilter;
+import org.apache.maven.surefire.SpecificTestClassFilter;
 
 /**
  * Scans directories looking for tests.
@@ -50,16 +50,16 @@ public class DefaultDirectoryScanner
 
     private final List excludes;
 
-    private final List oneOffTests;
+    private final List specificTests;
 
     private final List classesSkippedByValidation = new ArrayList();
 
-    public DefaultDirectoryScanner( File basedir, List includes, List excludes, List oneOffTests )
+    public DefaultDirectoryScanner( File basedir, List includes, List excludes, List specificTests )
     {
         this.basedir = basedir;
         this.includes = includes;
         this.excludes = excludes;
-        this.oneOffTests = oneOffTests;
+        this.specificTests = specificTests;
     }
 
     public TestsToRun locateTestClasses( ClassLoader classLoader, ScannerFilter scannerFilter )
@@ -67,8 +67,9 @@ public class DefaultDirectoryScanner
         String[] testClassNames = collectTests();
         List result = new ArrayList();
 
-        String[] allowed = oneOffTests == null ? new String[0] : processIncludesExcludes( oneOffTests );
-        OneOffTestClassFilter oneOffFilter = new OneOffTestClassFilter( allowed );
+        System.out.println( "Got specific tests: " + specificTests );
+        String[] specific = specificTests == null ? new String[0] : processIncludesExcludes( specificTests );
+        SpecificTestClassFilter specificTestFilter = new SpecificTestClassFilter( specific );
 
         for ( int i = 0; i < testClassNames.length; i++ )
         {
@@ -76,8 +77,9 @@ public class DefaultDirectoryScanner
 
             Class testClass = loadClass( classLoader, className );
 
-            if ( !oneOffFilter.accept( testClass ) )
+            if ( !specificTestFilter.accept( testClass ) )
             {
+                System.out.println( "Skip: " + testClass.getName() );
                 // FIXME: Log this somehow!
                 continue;
             }
@@ -91,6 +93,8 @@ public class DefaultDirectoryScanner
                 classesSkippedByValidation.add( testClass );
             }
         }
+
+        System.out.println( "Running: " + result );
         return new TestsToRun( result );
     }
 

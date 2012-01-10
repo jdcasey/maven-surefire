@@ -386,9 +386,22 @@ public abstract class AbstractSurefireMojo
         }
         else
         {
-            if ( isSpecificTestSpecified() && getFailIfNoTests() == null )
+            if ( isSpecificTestSpecified() )
             {
-                setFailIfNoTests( Boolean.TRUE );
+                if ( getFailIfNoSpecifiedTests() == null )
+                {
+                    failIfNoTests = true;
+                }
+                else
+                {
+                    failIfNoTests = getFailIfNoSpecifiedTests().booleanValue();
+                }
+
+                setFailIfNoTests( Boolean.valueOf( failIfNoTests ) );
+            }
+            else
+            {
+                failIfNoTests = getFailIfNoTests() != null && getFailIfNoTests().booleanValue();
             }
 
             List<String> includes = getIncludeList();
@@ -529,27 +542,15 @@ public abstract class AbstractSurefireMojo
 
     private List<String> getIncludeList()
     {
-        List<String> includes;
-        if ( isSpecificTestSpecified() )
+        List<String> includes = this.getIncludes();
+
+        // defaults here, qdox doesn't like the end javadoc value
+        // Have to wrap in an ArrayList as surefire expects an ArrayList instead of a List for some reason
+        if ( includes == null || includes.size() == 0 )
         {
-            // Check to see if we are running a single test. The raw parameter will
-            // come through if it has not been set.
-
-            // FooTest -> **/FooTest.java
-
-            includes = getSpecificTests();
+            includes = new ArrayList<String>( Arrays.asList( getDefaultIncludes() ) );
         }
-        else
-        {
-            includes = this.getIncludes();
 
-            // defaults here, qdox doesn't like the end javadoc value
-            // Have to wrap in an ArrayList as surefire expects an ArrayList instead of a List for some reason
-            if ( includes == null || includes.size() == 0 )
-            {
-                includes = new ArrayList<String>( Arrays.asList( getDefaultIncludes() ) );
-            }
-        }
         return includes;
     }
 

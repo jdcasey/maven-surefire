@@ -34,35 +34,35 @@ public class DirectoryScannerParameters
 
     private final List excludes;
 
-    private final List oneOffTests;
+    private final List specificTests;
 
     private final Boolean failIfNoTests;
 
     private final RunOrder[] runOrder;
 
-    private DirectoryScannerParameters( File testClassesDirectory, List includes, List excludes, List oneOffTests,
+    private DirectoryScannerParameters( File testClassesDirectory, List includes, List excludes, List specificTests,
                                         Boolean failIfNoTests,
                                         RunOrder[] runOrder )
     {
         this.testClassesDirectory = testClassesDirectory;
         this.includes = includes;
         this.excludes = excludes;
-        this.oneOffTests = oneOffTests;
+        this.specificTests = specificTests;
         this.failIfNoTests = failIfNoTests;
         this.runOrder = runOrder;
     }
 
-    public DirectoryScannerParameters( File testClassesDirectory, List includes, List excludes, List oneOffTests,
+    public DirectoryScannerParameters( File testClassesDirectory, List includes, List excludes, List specificTests,
                                        Boolean failIfNoTests,
                                        String runOrder )
     {
-        this( testClassesDirectory, includes, excludes, oneOffTests, failIfNoTests,
+        this( testClassesDirectory, includes, excludes, specificTests, failIfNoTests,
               runOrder == null ? RunOrder.DEFAULT : RunOrder.valueOfMulti( runOrder ) );
     }
 
-    public List getOneOffTests()
+    public List getSpecificTests()
     {
-        return oneOffTests;
+        return specificTests;
     }
 
     /**
