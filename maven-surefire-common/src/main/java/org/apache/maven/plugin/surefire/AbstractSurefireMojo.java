@@ -413,7 +413,7 @@ public abstract class AbstractSurefireMojo
             List<String> specificTests = getSpecificTests();
             directoryScannerParameters =
                 new DirectoryScannerParameters( getTestClassesDirectory(), includes, excludes, specificTests,
-                                                                         getRunOrder() );
+                                                failIfNoTests, getRunOrder() );
         }
 
         Properties providerProperties = getProperties();
