@@ -28,7 +28,6 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>org.apache.maven.surefire</groupId>
   <artifactId>surefire-integration-tests</artifactId>
 
   <name>Maven Surefire Integration Tests</name>
@@ -38,7 +37,7 @@
     <it.settings.showPasswords>false</it.settings.showPasswords>
     <testng.version>5.7</testng.version>
     <surefire.threadcount>1</surefire.threadcount>
-    <surefire.build.version>2.8</surefire.build.version>
+    <surefire.build.version>2.11</surefire.build.version>
   </properties>
 
   <dependencies>
@@ -78,13 +77,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-        </configuration>
-      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
@@ -190,7 +182,7 @@
         </dependency>
       </dependencies>
       <properties>
-        <surefire.build.version>2.8</surefire.build.version>
+        <surefire.build.version>2.11</surefire.build.version>
       </properties>
     </profile>
 

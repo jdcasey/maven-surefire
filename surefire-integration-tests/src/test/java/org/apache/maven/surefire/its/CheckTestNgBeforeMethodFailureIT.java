@@ -19,43 +19,21 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-import org.apache.maven.it.VerificationException;
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test failures in @BeforeMethod annotation on TestNg suite
  *
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
+ * @author <a href="mailto:krosenvold@apache.org">Kristian Rosenvold</a>
  */
 public class CheckTestNgBeforeMethodFailureIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
+
     public void testTestNgBeforeMethodFailure()
         throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/testng-beforeMethodFailure" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        try
-        {
-            this.executeGoal( verifier, "test" );
-            verifier.resetStreams();
-            verifier.verifyErrorFreeLog();
-            fail( "Build didn't fail, but it should" );
-        }
-        catch ( VerificationException e )
-        {
-            // as expected
-        }
-        finally
-        {
-            verifier.resetStreams();
-        }
-
-        HelperAssertions.assertTestSuiteResults( 2, 0, 1, 1, testDir );
+        unpack( "/testng-beforeMethodFailure" ).executeTestWithFailure().assertTestSuiteResults( 2, 0, 1, 1 );
     }
 }

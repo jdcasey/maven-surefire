@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,7 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test JUnit 4 tests marked with "Ignore" attribute
@@ -26,19 +27,10 @@ package org.apache.maven.surefire.its;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class JUnit4ForkAlwaysStaticInitPollutionIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
-
-    public JUnit4ForkAlwaysStaticInitPollutionIT()
-    {
-        super( "/junit4-forkAlways-staticInit" );
-    }
-
     public void testJunit4Ignore()
-        throws Exception
     {
-        this.executeTest();
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 2, 0, 0, 0 );
+        executeErrorFreeTest( "junit4-forkAlways-staticInit", 2 );
     }
 }

@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,12 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test additionalClasspathElements
@@ -31,18 +27,11 @@ import java.io.File;
  * @author pgier
  */
 public class ClasspathFilteringIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     public void testAdditionalClasspath()
         throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/classpath-filtering" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        this.executeGoal( verifier, "test" );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+        unpack( "classpath-filtering" ).executeTest().verifyErrorFree( 1 );
     }
 }

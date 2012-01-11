@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,34 +19,21 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-import java.io.File;
-import org.apache.maven.it.VerificationException;
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test for checking that the output from a forked suite is properly captured even if the suite encounters a severe error.
  *
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
+ * @author <a href="mailto:krosenvold@apache.org">Kristian Rosenvold</a>
  */
 public class CheckTestNgExecuteErrorIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     public void testExecuteError()
         throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/testng-execute-error" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        try
-        {
-            this.executeGoal( verifier, "test" );
-        }
-        catch ( VerificationException e )
-        {
-        } // expected 
-
-        verifier.resetStreams();
-        verifier.verifyTextInLog( "at org.apache.maven.surefire.testng.TestNGExecutor.run" );
+        unpack( "/testng-execute-error" ).executeTestWithFailure()
+            .verifyTextInLog( "at org.apache.maven.surefire.testng.TestNGExecutor.run" );
     }
 }

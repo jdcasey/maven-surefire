@@ -19,23 +19,20 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-import org.apache.maven.it.VerificationException;
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.List;
+import org.apache.maven.it.VerificationException;
+import org.apache.maven.surefire.its.fixture.OutputValidator;
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Verifies the runOrder setting and its effect
- * 
+ *
  * @author Kristian Rosenvold
  */
 public class RunOrderIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     private static final String[] TESTS_IN_ALPHABETICAL_ORDER = { "TA", "TB", "TC" };
 
@@ -43,42 +40,25 @@ public class RunOrderIT
 
     // testing random is left as an exercise to the reader. Patches welcome
 
-    private File testDir;
-
-    private Verifier verifier;
-
-    public void setUp()
-        throws IOException, VerificationException
-    {
-        testDir = ResourceExtractor.simpleExtractResources( getClass(), "/runOrder" );
-        verifier = new Verifier( testDir.getAbsolutePath() );
-    }
-
-    public void tearDown()
-        throws Exception
-    {
-        verifier.resetStreams();
-    }
-
     public void testAlphabetical()
         throws Exception
     {
-        executeWithRunOrder( "alphabetical" );
-        assertTestnamesAppearInSpecificOrder( TESTS_IN_ALPHABETICAL_ORDER );
+        OutputValidator validator = executeWithRunOrder("alphabetical");
+        assertTestnamesAppearInSpecificOrder(validator, TESTS_IN_ALPHABETICAL_ORDER );
     }
 
     public void testReverseAlphabetical()
         throws Exception
     {
-        executeWithRunOrder( "reversealphabetical" );
-        assertTestnamesAppearInSpecificOrder( TESTS_IN_REVERSE_ALPHABETICAL_ORDER );
+        OutputValidator validator = executeWithRunOrder("reversealphabetical");
+        assertTestnamesAppearInSpecificOrder(validator, TESTS_IN_REVERSE_ALPHABETICAL_ORDER );
     }
 
     public void testHourly()
         throws Exception
     {
         int startHour = Calendar.getInstance().get( Calendar.HOUR_OF_DAY );
-        executeWithRunOrder( "hourly" );
+        OutputValidator validator = executeWithRunOrder("hourly");
         int endHour = Calendar.getInstance().get( Calendar.HOUR_OF_DAY );
         if ( startHour != endHour )
         {
@@ -87,68 +67,38 @@ public class RunOrderIT
 
         String[] testnames =
             ( ( startHour % 2 ) == 0 ) ? TESTS_IN_ALPHABETICAL_ORDER : TESTS_IN_REVERSE_ALPHABETICAL_ORDER;
-        assertTestnamesAppearInSpecificOrder( testnames );
+        assertTestnamesAppearInSpecificOrder(validator, testnames);
     }
 
     public void testNonExistingRunOrder()
         throws Exception
     {
-        try
-        {
-            executeTestsWithRunOrder( "nonExistingRunOrder" );
-        }
-        catch ( VerificationException e )
-        {
-        }
-        verifier.verifyTextInLog( "There's no RunOrder with the name nonExistingRunOrder." );
+        unpack().forkMode(getForkMode()).runOrder("nonExistingRunOrder").executeTestWithFailure()
+        .verifyTextInLog("There's no RunOrder with the name nonExistingRunOrder.");
     }
 
-    private void executeWithRunOrder( String runOrder )
+    private OutputValidator executeWithRunOrder(String runOrder)
         throws IOException, VerificationException
     {
-        executeTestsWithRunOrder( runOrder );
-        verifier.verifyErrorFreeLog();
-        HelperAssertions.assertTestSuiteResults( 3, 0, 0, 0, testDir );
+        return unpack().forkMode(getForkMode()).runOrder(runOrder).executeTest().verifyErrorFree(3);
     }
 
-    private void executeTestsWithRunOrder( String runOrder )
-        throws VerificationException
+
+    protected String getForkMode()
     {
-        List<String> goals = getInitialGoals();
-        goals.add( "-DrunOrder=" + runOrder );
-        goals.add( "test" );
-        executeGoals( verifier, goals );
+        return "once";
     }
 
-    private void assertTestnamesAppearInSpecificOrder( String[] testnames )
+    private SurefireLauncher unpack() {
+        return unpack("runOrder");
+    }
+
+    private void assertTestnamesAppearInSpecificOrder(OutputValidator validator, String[] testnames)
         throws VerificationException
     {
-        if ( !testnamesAppearInSpecificOrder( testnames ) )
+        if ( !validator.stringsAppearInSpecificOrderInLog(testnames) )
         {
             throw new VerificationException( "Response does not contain expected item" );
         }
-    }
-
-    private boolean testnamesAppearInSpecificOrder( String[] testnames ) throws VerificationException
-    {
-        int i = 0;
-        for ( String line : getLog() )
-        {
-            if ( line.startsWith( testnames[i] ) )
-            {
-                if ( i == testnames.length - 1 )
-                {
-                    return true;
-                }
-                ++i;
-            }
-        }
-        return false;
-    }
-
-    private List<String> getLog()
-        throws VerificationException
-    {
-        return verifier.loadFile( verifier.getBasedir(), verifier.getLogFileName(), false );
     }
 }

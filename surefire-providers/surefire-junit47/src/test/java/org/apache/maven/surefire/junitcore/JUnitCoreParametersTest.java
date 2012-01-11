@@ -1,3 +1,5 @@
+package org.apache.maven.surefire.junitcore;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,21 +18,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.maven.surefire.junitcore;
-
 
 import junit.framework.TestCase;
-import org.junit.Test;
 
 import java.util.Properties;
-
-import static org.junit.Assert.*;
 
 /*
  * @author Kristian Rosenvold, kristian.rosenvold@gmail com
  */
-
-public class JUnitCoreParametersTest extends TestCase
+public class JUnitCoreParametersTest
+    extends TestCase
 {
     public void testIsParallelMethod()
         throws Exception

@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test useManifestOnlyJar option
@@ -25,19 +27,10 @@ package org.apache.maven.surefire.its;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class PlainOldJavaClasspathIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
-
-    public PlainOldJavaClasspathIT()
-    {
-        super( "/plain-old-java-classpath" );
-    }
-
     public void testPlainOldJavaClasspath()
-        throws Exception
     {
-        this.executeTest();
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 1, 0, 0, 0 );
+        executeErrorFreeTest("plain-old-java-classpath", 1);
     }
 }

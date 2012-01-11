@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test that TestNG's @Test(threadPoolSize = n, invocationCount=n) causes tests to be run in parallel.
@@ -26,18 +28,10 @@ package org.apache.maven.surefire.its;
  * 
  */
 public class TestNgParallelWithAnnotationsIT
-   extends SurefireVerifierTestClass
+   extends SurefireIntegrationTestCase
 {
-    public TestNgParallelWithAnnotationsIT()
+    public void testTestNgGroupThreadParallel()
     {
-        super( "/testng-parallel-with-annotations" );
-    }
-
-    public void testTestNgGroupThreadParallel ()
-        throws Exception
-    {
-        executeTest();
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 3, 0, 0, 0 );
+        executeErrorFreeTest("/testng-parallel-with-annotations", 3);
     }
 }

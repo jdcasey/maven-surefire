@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,16 +19,10 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-import org.apache.maven.it.VerificationException;
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
+import org.apache.maven.surefire.its.fixture.OutputValidator;
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
+import org.apache.maven.surefire.its.fixture.TestFile;
 
 /**
  * Test forkMode
@@ -35,44 +30,37 @@ import java.util.List;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class ForkModeIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     public void testForkModeAlways()
-        throws Exception
     {
-        String[] pids = doTest( "always" );
 
+        String[] pids = doTest( unpack( getProject() ).forkAlways());
         assertDifferentPids( pids );
     }
 
     public void testForkModePerTest()
-        throws Exception
     {
-        String[] pids = doTest( "pertest" );
-
+        String[] pids = doTest( unpack( getProject() ).forkPerTest());
         assertDifferentPids( pids );
     }
 
     public void testForkModeNever()
-        throws Exception
     {
-        String[] pids = doTest( "never" );
-
+        String[] pids = doTest(  unpack( getProject() ).forkNever() );
         assertSamePids( pids );
     }
 
     public void testForkModeNone()
-        throws Exception
     {
-        String[] pids = doTest( "none" );
+        String[] pids = doTest( unpack( getProject() ).forkMode( "none" ));
 
         assertSamePids( pids );
     }
 
     public void testForkModeOnce()
-        throws Exception
     {
-        String[] pids = doTest( "once" );
+        String[] pids = doTest( unpack( getProject() ).forkOnce());
         // DGF It would be nice to assert that "once" was different
         // from "never" ... but there's no way to check the PID of
         // Maven itself.  No matter, "once" is tested by setting
@@ -104,27 +92,15 @@ public class ForkModeIT
         }
     }
 
-    private String[] doTest( String forkMode )
-        throws IOException, VerificationException
+    private String[] doTest( SurefireLauncher forkMode )
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), getProject() );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-DforkMode=" + forkMode );
-        executeGoals( verifier, goals );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 3, 0, 0, 0, testDir );
-
-        File targetDir = new File( testDir, "target" );
+        final OutputValidator outputValidator = forkMode.executeTest();
+        outputValidator.verifyErrorFreeLog().assertTestSuiteResults( 3, 0, 0, 0 );
         String[] pids = new String[3];
         for ( int i = 1; i <= pids.length; i++ )
         {
-            File pidFile = new File( targetDir, "test" + i + "-pid" );
-            String pid = slurpFile( pidFile );
+            final TestFile targetFile = outputValidator.getTargetFile( "test" + i + "-pid" );
+            String pid = targetFile.slurpFile();
             pids[i - 1] = pid;
         }
         return pids;
@@ -132,19 +108,7 @@ public class ForkModeIT
 
     protected String getProject()
     {
-        return "/fork-mode";
+        return "fork-mode";
     }
 
-    private String slurpFile( File textFile )
-        throws IOException
-    {
-        StringBuffer sb = new StringBuffer();
-        BufferedReader reader = new BufferedReader( new FileReader( textFile ) );
-        for ( String line = reader.readLine(); line != null; line = reader.readLine() )
-        {
-            sb.append( line );
-        }
-        reader.close();
-        return sb.toString();
-    }
 }

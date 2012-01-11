@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,13 +19,8 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
-import java.util.List;
+import org.apache.maven.surefire.its.fixture.OutputValidator;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Basic suite test using all known versions of TestNG. Used for regression testing Surefire against old versions.
@@ -32,9 +28,10 @@ import java.util.List;
  * -Dtestng.version=5.14.2 (for example)
  *
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
+ * @author <a href="mailto:krosenvold@apache.org">Kristian Rosenvold</a>
  */
 public class CheckTestNgVersionsIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
 
     public void test47()
@@ -157,17 +154,8 @@ public class CheckTestNgVersionsIT
     public void runTestNgTest( String version )
         throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/testng-simple" );
 
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> arguments = this.getInitialGoals( version );
-        arguments.add( "test" );
-
-        executeGoals( verifier, arguments );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        IntegrationTestSuiteResults suite = HelperAssertions.parseTestResults( testDir );
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, suite );
+        final OutputValidator outputValidator = unpack( "testng-simple" ).resetInitialGoals( version ).executeTest();
+        outputValidator.verifyErrorFreeLog().assertTestSuiteResults( 1, 0, 0, 0 );
     }
 }

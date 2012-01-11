@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,7 +19,6 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
 /**
  * Test forkMode
  * 
@@ -29,6 +29,6 @@ public class ForkModeTestNGIT
 {
     protected String getProject()
     {
-        return "/fork-mode-testng";
+        return "fork-mode-testng";
     }
 }

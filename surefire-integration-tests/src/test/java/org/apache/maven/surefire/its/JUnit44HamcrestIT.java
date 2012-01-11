@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test project using JUnit4.4 (including Hamcrest extensions)
@@ -25,18 +27,10 @@ package org.apache.maven.surefire.its;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class JUnit44HamcrestIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
-    public JUnit44HamcrestIT()
-    {
-        super( "/junit44-hamcrest" );
-    }
-
     public void testJUnit44Hamcrest()
-        throws Exception
     {
-        executeTest();
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 1, 0, 0, 0 );
+        executeErrorFreeTest( "junit44-hamcrest", 1 );
     }
 }

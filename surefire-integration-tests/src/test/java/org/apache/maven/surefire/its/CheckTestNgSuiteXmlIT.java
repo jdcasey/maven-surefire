@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,14 +19,8 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test simple TestNG suite XML file
@@ -33,35 +28,22 @@ import java.util.List;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class CheckTestNgSuiteXmlIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     public void testTestNgSuiteXml()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/testng-suite-xml" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = getInitialGoals();
-        goals.add( "test" );
-        executeGoals( verifier, goals );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+        unpack().executeTest().verifyErrorFree( 1) ;
     }
 
     public void testTestNgSuiteXmlForkModeAlways()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/testng-suite-xml" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = getInitialGoals();
-        goals.addAll( Arrays.asList( new String[]{ "test", "-DforkMode=always" } ) );
-        executeGoals( verifier, goals );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+        unpack().forkAlways().executeTest().verifyErrorFree( 1) ;
     }
+
+    private SurefireLauncher unpack()
+    {
+       return unpack( "testng-suite-xml" );
+    }
+
+
 }

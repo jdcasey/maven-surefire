@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -68,17 +69,17 @@ public interface SurefireExecutionParameters
 
     void setProject( MavenProject project );
 
-    List getClasspathDependencyExcludes();
+    List<String> getClasspathDependencyExcludes();
 
-    void setClasspathDependencyExcludes( List classpathDependencyExcludes );
+    void setClasspathDependencyExcludes( List<String> classpathDependencyExcludes );
 
     String getClasspathDependencyScopeExclude();
 
     void setClasspathDependencyScopeExclude( String classpathDependencyScopeExclude );
 
-    List getAdditionalClasspathElements();
+    List<String> getAdditionalClasspathElements();
 
-    void setAdditionalClasspathElements( List additionalClasspathElements );
+    void setAdditionalClasspathElements( List<String> additionalClasspathElements );
 
     File getReportsDirectory();
 
@@ -94,13 +95,13 @@ public interface SurefireExecutionParameters
 
     void setTest( String test );
 
-    List getIncludes();
+    List<String> getIncludes();
 
-    void setIncludes( List includes );
+    void setIncludes( List<String> includes );
 
-    List getExcludes();
+    List<String> getExcludes();
 
-    void setExcludes( List excludes );
+    void setExcludes( List<String> excludes );
 
     ArtifactRepository getLocalRepository();
 
@@ -110,9 +111,9 @@ public interface SurefireExecutionParameters
 
     void setSystemProperties( Properties systemProperties );
 
-    Map getSystemPropertyVariables();
+    Map<String,String> getSystemPropertyVariables();
 
-    void setSystemPropertyVariables( Map systemPropertyVariables );
+    void setSystemPropertyVariables( Map<String,String> systemPropertyVariables );
 
     File getSystemPropertiesFile();
 
@@ -122,13 +123,13 @@ public interface SurefireExecutionParameters
 
     void setProperties( Properties properties );
 
-    Map getPluginArtifactMap();
+    Map<String,Artifact> getPluginArtifactMap();
 
-    void setPluginArtifactMap( Map pluginArtifactMap );
+    void setPluginArtifactMap( Map<String,Artifact> pluginArtifactMap );
 
-    Map getProjectArtifactMap();
+    Map<String,Artifact> getProjectArtifactMap();
 
-    void setProjectArtifactMap( Map projectArtifactMap );
+    void setProjectArtifactMap( Map<String,Artifact> projectArtifactMap );
 
     boolean isPrintSummary();
 
@@ -170,9 +171,9 @@ public interface SurefireExecutionParameters
 
     void setForkedProcessTimeoutInSeconds( int forkedProcessTimeoutInSeconds );
 
-    Map getEnvironmentVariables();
+    Map<String,String> getEnvironmentVariables();
 
-    void setEnvironmentVariables( Map environmentVariables );
+    void setEnvironmentVariables( Map<String,String> environmentVariables );
 
     File getWorkingDirectory();
 
@@ -230,9 +231,9 @@ public interface SurefireExecutionParameters
 
     void setArtifactFactory( ArtifactFactory artifactFactory );
 
-    List getRemoteRepositories();
+    List<ArtifactRepository> getRemoteRepositories();
 
-    void setRemoteRepositories( List remoteRepositories );
+    void setRemoteRepositories( List<ArtifactRepository> remoteRepositories );
 
     ArtifactMetadataSource getMetadataSource();
 

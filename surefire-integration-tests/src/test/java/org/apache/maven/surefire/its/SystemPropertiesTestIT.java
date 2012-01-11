@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,41 +19,39 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
+
 /**
  * Test system properties
  *
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class SystemPropertiesTestIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
 
-    public SystemPropertiesTestIT()
-    {
-        super( "/system-properties" );
-    }
-
     public void testSystemProperties()
-        throws Exception
     {
-        addGoal( "-DsetOnMavenCommandLine=baz" );
-        addGoal( "-DsetOnArgLineWorkAround=baz" );
-        executeTest();
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 8, 0, 0, 0 );
+        unpack().addGoal( "-DsetOnMavenCommandLine=baz" )
+        .addGoal( "-DsetOnArgLineWorkAround=baz" )
+        .executeTest()
+        .verifyErrorFree(8);
     }
 
     public void testSystemPropertiesNoFork()
-        throws Exception
     {
-        addGoal( "-DforkMode=never" );
-        addGoal( "-DsetOnArgLineWorkAround=baz" );
-        addGoal( "-DsetOnMavenCommandLine=baz" );
-        // DGF fake the argLine, since we're not forking
-        addGoal( "-DsetOnArgLine=bar" );
-        executeTest();
-        verifyErrorFreeLog();
 
-        assertTestSuiteResults( 8, 0, 0, 0 );
+        unpack().forkNever().addGoal( "-DsetOnMavenCommandLine=baz" )
+        .addGoal( "-DsetOnArgLineWorkAround=baz" )
+        // DGF fake the argLine, since we're not forking
+        .addGoal( "-DsetOnArgLine=bar" )
+        .executeTest()
+        .verifyErrorFree(8);
+    }
+
+    public SurefireLauncher unpack()
+    {
+        return unpack("/system-properties");
     }
 }

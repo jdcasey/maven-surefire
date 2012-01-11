@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,12 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test basic default configuration, runs the JUnit 3 test in the src/test directory.
@@ -31,19 +27,10 @@ import java.io.File;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class DefaultConfigurationIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
-
-    public DefaultConfigurationIT() {
-        super("/default-configuration");
-    }
-
     public void testDefaultConfiguration()
-        throws Exception
     {
-        executeTest( );
-        verifyErrorFreeLog();
-
-        assertTestSuiteResults( 1, 0, 0, 0 );
+        executeErrorFreeTest( "default-configuration" , 1 );
     }
 }

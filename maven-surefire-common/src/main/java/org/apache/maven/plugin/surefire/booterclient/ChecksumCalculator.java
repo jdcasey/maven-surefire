@@ -28,10 +28,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 
 /**
  * @author Kristian Rosenvold
@@ -40,7 +38,7 @@ public class ChecksumCalculator
 {
     private static final String HEX = "0123456789ABCDEF";
 
-    private final List checksumItems = new ArrayList();
+    private final List<Object> checksumItems = new ArrayList<Object>();
 
     private void appendObject( Object item )
     {
@@ -54,10 +52,10 @@ public class ChecksumCalculator
 
     public void add( int value )
     {
-        checksumItems.add( new Integer( value ) );
+        checksumItems.add( value );
     }
 
-    public void add( Map map )
+    public void add( Map<?,?> map )
     {
         if ( map != null )
         {
@@ -80,15 +78,12 @@ public class ChecksumCalculator
         appendObject( localRepository );
     }
 
-    public void add( List items )
+    public void add( List<?> items )
     {
         if ( items != null )
         {
-            int size = items.size();
-            Object item;
-            for ( int i = 0; i < size; i++ )
+            for ( Object item : items )
             {
-                item = items.get( i );
                 appendObject( item );
             }
         }
@@ -103,10 +98,9 @@ public class ChecksumCalculator
     {
         if ( fileList != null )
         {
-            int size = fileList.length;
-            for ( int i = 0; i < size; i++ )
+            for ( File file : fileList )
             {
-                appendObject( fileList[i] );
+                appendObject( file );
             }
         }
         else
@@ -131,12 +125,9 @@ public class ChecksumCalculator
         {
             return null;
         }
-        int size = bytes.length;
-        final StringBuilder result = new StringBuilder( 2 * size );
-        byte b;
-        for ( int i = 0; i < size; i++ )
+        final StringBuilder result = new StringBuilder( 2 * bytes.length );
+        for ( byte b : bytes )
         {
-            b = bytes[i];
             result.append( HEX.charAt( ( b & 0xF0 ) >> 4 ) ).append( HEX.charAt( ( b & 0x0F ) ) );
         }
         return result.toString();
@@ -145,11 +136,9 @@ public class ChecksumCalculator
     private String getConfig()
     {
         StringBuilder result = new StringBuilder();
-        Object item;
-        for ( Iterator iter = checksumItems.iterator(); iter.hasNext(); )
+        for ( Object checksumItem : checksumItems )
         {
-            item = iter.next();
-            result.append( item != null ? item.toString() : "null" );
+            result.append( checksumItem != null ? checksumItem.toString() : "null" );
         }
         return result.toString();
     }

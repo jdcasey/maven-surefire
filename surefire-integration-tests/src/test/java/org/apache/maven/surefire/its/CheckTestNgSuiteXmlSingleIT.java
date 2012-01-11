@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,12 +19,7 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-import org.apache.maven.surefire.its.misc.ReportTestSuite;
-
-import java.io.File;
-import java.util.List;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Use -Dtest to run a single TestNG test, overriding the suite XML parameter.
@@ -31,23 +27,11 @@ import java.util.List;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class CheckTestNgSuiteXmlSingleIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
-    public CheckTestNgSuiteXmlSingleIT()
-    {
-        super( "/testng-twoTestCaseSuite" );
-    }
-
     public void testTestNGSuite()
-        throws Exception
     {
-        addGoal( "-Dtest=TestNGTestTwo" );
-        executeTest();
-        verifyErrorFreeLog();
-
-        List<ReportTestSuite> reports = HelperAssertions.extractReports( ( new File[]{ getTestDir() } ) );
-        IntegrationTestSuiteResults results = HelperAssertions.parseReportList( reports );
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, results );
+        unpack( "/testng-twoTestCaseSuite" ).setTestToRun( "TestNGTestTwo" ).executeTest().verifyErrorFree( 1 );
     }
 
 }

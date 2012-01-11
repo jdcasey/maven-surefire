@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,7 +19,9 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-import org.apache.maven.it.VerificationException;
+import org.apache.maven.surefire.its.fixture.OutputValidator;
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test include/exclude patterns.
@@ -27,45 +30,37 @@ import org.apache.maven.it.VerificationException;
  * @version $Id$
  */
 public class IncludesExcludesIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
-
-
-    public IncludesExcludesIT()
+    private SurefireLauncher unpack()
     {
-        super( "/includes-excludes" );
+        return unpack( "/includes-excludes" );
     }
 
     /**
      * Test surefire inclusions/exclusions
      */
     public void testIncludesExcludes()
-        throws Exception
     {
         testWithProfile( "-Psimple" );
     }
 
     public void testRegexIncludesExcludes()
-        throws Exception
     {
         testWithProfile( "-Pregex" );
     }
 
     public void testPathBasedIncludesExcludes()
-        throws Exception
     {
         testWithProfile( "-Ppath" );
     }
 
     private void testWithProfile( String profile )
-        throws VerificationException
     {
-        addGoal( profile );
-        execute( "test" );
-        assertPresent( getTargetFile( "testTouchFile.txt" ) );
-        assertPresent( getTargetFile( "defaultTestTouchFile.txt" ) );
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 2, 0, 0, 0 );
+        final OutputValidator outputValidator = unpack().
+            addGoal( profile ).executeTest().verifyErrorFree( 2 );
+        outputValidator.getTargetFile( "testTouchFile.txt" ).assertFileExists();
+        outputValidator.getTargetFile( "defaultTestTouchFile.txt" ).assertFileExists();
     }
 
 }

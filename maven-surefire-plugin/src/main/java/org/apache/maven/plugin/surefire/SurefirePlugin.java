@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -127,7 +129,7 @@ public class SurefirePlugin
      * @parameter
      * @since 2.6
      */
-    private List classpathDependencyExcludes;
+    private List<String> classpathDependencyExcludes;
 
     /**
      * A dependency scope to exclude from the test classpath. The scope can be one of the following scopes:
@@ -149,7 +151,7 @@ public class SurefirePlugin
      * @parameter
      * @since 2.4
      */
-    private List additionalClasspathElements;
+    private List<String> additionalClasspathElements;
 
     /**
      * Base directory where all reports are written to.
@@ -194,7 +196,7 @@ public class SurefirePlugin
      *
      * @parameter
      */
-    private List includes;
+    private List<String> includes;
 
     /**
      * A list of &lt;exclude> elements specifying the tests (by pattern) that should be excluded in testing. When not
@@ -207,7 +209,7 @@ public class SurefirePlugin
      *
      * @parameter
      */
-    private List excludes;
+    private List<String> excludes;
 
     /**
      * ArtifactRepository of the localRepository. To obtain the directory of localRepository in unit tests use
@@ -233,7 +235,7 @@ public class SurefirePlugin
      * @parameter
      * @since 2.5
      */
-    private Map systemPropertyVariables;
+    private Map<String,String> systemPropertyVariables;
 
     /**
      * List of System properties, loaded from a file, to pass to the JUnit tests.
@@ -259,7 +261,7 @@ public class SurefirePlugin
      * @required
      * @readonly
      */
-    private Map pluginArtifactMap;
+    private Map<String,Artifact> pluginArtifactMap;
 
     /**
      * Map of project artifacts.
@@ -268,7 +270,7 @@ public class SurefirePlugin
      * @required
      * @readonly
      */
-    private Map projectArtifactMap;
+    private Map<String,Artifact> projectArtifactMap;
 
     /**
      * Option to print summary of test suites or just print the test cases that have errors.
@@ -319,8 +321,8 @@ public class SurefirePlugin
     private Boolean failIfNoTests;
 
     /**
-     * Option to specify the forking mode. Can be "never", "once" or "always". "none" and "pertest" are also accepted
-     * for backwards compatibility. "always" forks for each test-class.
+     * Option to specify the forking mode. Can be "never", "once", "always" or "perthread". "none" and "pertest" are also accepted
+     * for backwards compatibility. "always" forks for each test-class. "perthread" will create "threadCount" parallel forks.
      *
      * @parameter expression="${forkMode}" default-value="once"
      * @since 2.1
@@ -371,7 +373,7 @@ public class SurefirePlugin
      * @parameter
      * @since 2.1.3
      */
-    private Map environmentVariables = new HashMap();
+    private Map<String,String> environmentVariables = new HashMap<String,String>();
 
     /**
      * Command line working directory.
@@ -442,8 +444,9 @@ public class SurefirePlugin
     private String testNGArtifactName;
 
     /**
-     * (TestNG/JUnit 4.7 provider only) The attribute thread-count allows you to specify how many threads should be
-     * allocated for this execution. Only makes sense to use in conjunction with the <code>parallel</code> parameter.
+     * (forkMode=perthread or TestNG/JUnit 4.7 provider) The attribute thread-count allows you to specify how many threads should be
+     * allocated for this execution. Only makes sense to use in conjunction with the <code>parallel</code> parameter. (forkMode=perthread
+     * does not support/require the <code>parallel</code> parameter)
      *
      * @parameter expression="${threadCount}"
      * @since 2.2
@@ -509,7 +512,7 @@ public class SurefirePlugin
      * @parameter expression="${project.pluginArtifactRepositories}"
      * @since 2.2
      */
-    private List remoteRepositories;
+    private List<ArtifactRepository> remoteRepositories;
 
     /**
      * For retrieval of artifact's metadata.
@@ -754,12 +757,12 @@ public class SurefirePlugin
         this.project = project;
     }
 
-    public List getClasspathDependencyExcludes()
+    public List<String> getClasspathDependencyExcludes()
     {
         return classpathDependencyExcludes;
     }
 
-    public void setClasspathDependencyExcludes( List classpathDependencyExcludes )
+    public void setClasspathDependencyExcludes( List<String> classpathDependencyExcludes )
     {
         this.classpathDependencyExcludes = classpathDependencyExcludes;
     }
@@ -774,12 +777,12 @@ public class SurefirePlugin
         this.classpathDependencyScopeExclude = classpathDependencyScopeExclude;
     }
 
-    public List getAdditionalClasspathElements()
+    public List<String> getAdditionalClasspathElements()
     {
         return additionalClasspathElements;
     }
 
-    public void setAdditionalClasspathElements( List additionalClasspathElements )
+    public void setAdditionalClasspathElements( List<String> additionalClasspathElements )
     {
         this.additionalClasspathElements = additionalClasspathElements;
     }
@@ -840,22 +843,22 @@ public class SurefirePlugin
         this.test = test;
     }
 
-    public List getIncludes()
+    public List<String> getIncludes()
     {
         return includes;
     }
 
-    public void setIncludes( List includes )
+    public void setIncludes( List<String> includes )
     {
         this.includes = includes;
     }
 
-    public List getExcludes()
+    public List<String> getExcludes()
     {
         return excludes;
     }
 
-    public void setExcludes( List excludes )
+    public void setExcludes( List<String> excludes )
     {
         this.excludes = excludes;
     }
@@ -886,12 +889,12 @@ public class SurefirePlugin
         this.systemProperties = systemProperties;
     }
 
-    public Map getSystemPropertyVariables()
+    public Map<String,String> getSystemPropertyVariables()
     {
         return systemPropertyVariables;
     }
 
-    public void setSystemPropertyVariables( Map systemPropertyVariables )
+    public void setSystemPropertyVariables( Map<String,String> systemPropertyVariables )
     {
         this.systemPropertyVariables = systemPropertyVariables;
     }
@@ -916,22 +919,22 @@ public class SurefirePlugin
         this.properties = properties;
     }
 
-    public Map getPluginArtifactMap()
+    public Map<String,Artifact> getPluginArtifactMap()
     {
         return pluginArtifactMap;
     }
 
-    public void setPluginArtifactMap( Map pluginArtifactMap )
+    public void setPluginArtifactMap( Map<String,Artifact> pluginArtifactMap )
     {
         this.pluginArtifactMap = pluginArtifactMap;
     }
 
-    public Map getProjectArtifactMap()
+    public Map<String,Artifact> getProjectArtifactMap()
     {
         return projectArtifactMap;
     }
 
-    public void setProjectArtifactMap( Map projectArtifactMap )
+    public void setProjectArtifactMap( Map<String,Artifact> projectArtifactMap )
     {
         this.projectArtifactMap = projectArtifactMap;
     }
@@ -1046,12 +1049,12 @@ public class SurefirePlugin
         this.forkedProcessTimeoutInSeconds = forkedProcessTimeoutInSeconds;
     }
 
-    public Map getEnvironmentVariables()
+    public Map<String,String> getEnvironmentVariables()
     {
         return environmentVariables;
     }
 
-    public void setEnvironmentVariables( Map environmentVariables )
+    public void setEnvironmentVariables( Map<String,String> environmentVariables )
     {
         this.environmentVariables = environmentVariables;
     }
@@ -1196,12 +1199,12 @@ public class SurefirePlugin
         this.artifactFactory = artifactFactory;
     }
 
-    public List getRemoteRepositories()
+    public List<ArtifactRepository> getRemoteRepositories()
     {
         return remoteRepositories;
     }
 
-    public void setRemoteRepositories( List remoteRepositories )
+    public void setRemoteRepositories( List<ArtifactRepository> remoteRepositories )
     {
         this.remoteRepositories = remoteRepositories;
     }
@@ -1308,7 +1311,7 @@ public class SurefirePlugin
 
     public boolean isMavenParallel()
     {
-        return parallelMavenExecution != null && parallelMavenExecution.booleanValue();
+        return parallelMavenExecution != null && parallelMavenExecution;
     }
 
     public String getRunOrder()

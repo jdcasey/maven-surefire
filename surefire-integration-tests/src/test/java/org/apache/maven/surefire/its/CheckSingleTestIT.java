@@ -19,100 +19,47 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.it.VerificationException;
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
-import java.util.List;
+import org.apache.maven.surefire.its.fixture.OutputValidator;
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
+import org.apache.maven.surefire.its.fixture.TestFile;
 
 /**
  * Test running a single test with -Dtest=BasicTest
  *
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
+ * @author <a href="mailto:krosenvold@apache.org">Kristian Rosenvold</a>
  */
 public class CheckSingleTestIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     public void testSingleTest()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/default-configuration" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-Dtest=BasicTest" );
-        executeGoals( verifier, goals );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+        unpack().setTestToRun("BasicTest" ).executeTest().verifyErrorFree( 1 );
     }
 
     public void testSingleTestDotJava()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/default-configuration" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-Dtest=BasicTest.java" );
-        executeGoals( verifier, goals );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+        unpack().setTestToRun("BasicTest.java" ).executeTest().verifyErrorFree( 1 );
     }
 
     public void testSingleTestNonExistent()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/default-configuration" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-Dtest=DoesNotExist" );
-
-        try
-        {
-            executeGoals( verifier, goals );
-            verifier.verifyErrorFreeLog();
-            fail( "Build should have failed" );
-        }
-        catch ( VerificationException e )
-        {
-            // as expected
-        }
-        finally
-        {
-            verifier.resetStreams();
-        }
-
-        File reportsDir = new File( testDir, "target/surefire-reports" );
+        final OutputValidator output = unpack().setTestToRun( "DoesNotExist" ).executeTestWithFailure();
+        TestFile reportsDir = output.getTargetFile( "surefire-reports" );
         assertFalse( "Unexpected reports directory", reportsDir.exists() );
     }
 
     public void testSingleTestNonExistentOverride()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/default-configuration" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-Dtest=DoesNotExist" );
-        goals.add( "-DfailIfNoTests=false" );
-        executeGoals( verifier, goals );
-
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        File reportsDir = new File( testDir, "target/surefire-reports" );
+        final OutputValidator output = unpack().setTestToRun( "DoesNotExist" ).failIfNoTests(false).executeTest().verifyErrorFreeLog();
+        TestFile reportsDir = output.getTargetFile( "surefire-reports" );
         assertFalse( "Unexpected reports directory", reportsDir.exists() );
     }
+
+    private SurefireLauncher unpack()
+    {
+        return unpack( "/default-configuration" );
+    }
+
 }

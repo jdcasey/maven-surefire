@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,13 +19,8 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
-
-import java.io.File;
-import java.util.List;
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Test library using a conflicting version of plexus-utils
@@ -32,34 +28,19 @@ import java.util.List;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class PlexusConflictIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
     public void testPlexusConflict()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/plexus-conflict" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        this.executeGoal( verifier, "test" );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+        unpack().executeTest().verifyErrorFree(1);
     }
 
     public void testPlexusConflictIsolatedClassLoader()
-        throws Exception
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/plexus-conflict" );
+        unpack().addD( "surefire.useSystemClassLoader", "false" ).executeTest().verifyErrorFree(1);
+    }
 
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-Dsurefire.useSystemClassLoader=false" );
-        executeGoals( verifier, goals );
-        verifier.verifyErrorFreeLog();
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 1, 0, 0, 0, testDir );
+    private SurefireLauncher unpack() {
+        return unpack("/plexus-conflict");
     }
 }

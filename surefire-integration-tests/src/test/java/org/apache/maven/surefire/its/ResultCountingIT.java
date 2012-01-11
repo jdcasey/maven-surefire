@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,17 +19,11 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
-
 import org.apache.maven.it.VerificationException;
-import org.apache.maven.it.Verifier;
-import org.apache.maven.it.util.ResourceExtractor;
-import org.apache.maven.surefire.its.misc.HelperAssertions;
+import org.apache.maven.surefire.its.fixture.OutputValidator;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Verifies that the providers get the result summary at the bottom of the run correctly, in different forkmodes
@@ -37,9 +32,9 @@ import java.util.List;
  * @author Kristian Rosenvold
  */
 public class ResultCountingIT
-    extends AbstractSurefireIntegrationTestClass
+    extends SurefireIntegrationTestCase
 {
-    public void testCountingWithJunit481ForkNever()
+   public void testCountingWithJunit481ForkNever()
         throws Exception
     {
         assertForkMode( "never" );
@@ -51,7 +46,6 @@ public class ResultCountingIT
         assertForkMode( "once" );
     }
 
-
     public void testCountingWithJunit481ForkAlways()
         throws Exception
     {
@@ -61,26 +55,8 @@ public class ResultCountingIT
     private void assertForkMode( String forkMode )
         throws IOException, VerificationException
     {
-        File testDir = ResourceExtractor.simpleExtractResources( getClass(), "/result-counting" );
-
-        Verifier verifier = new Verifier( testDir.getAbsolutePath() );
-        String[] opts = { "-fn" };
-        verifier.setCliOptions( new ArrayList<String>( Arrays.asList( opts ) ) );
-        List<String> goals = getGoals( forkMode );
-        this.executeGoals( verifier, goals );
-
-        verifier.resetStreams();
-
-        HelperAssertions.assertTestSuiteResults( 36, 23, 4, 2, testDir );
-
-        verifier.verifyTextInLog( "Tests run: 36, Failures: 4, Errors: 23, Skipped: 2" );
-    }
-
-    private List<String> getGoals( String forkMode )
-    {
-        List<String> goals = this.getInitialGoals();
-        goals.add( "test" );
-        goals.add( "-DforkMode=" + forkMode );
-        return goals;
+        OutputValidator outputValidator = unpack("result-counting").failNever().forkMode(forkMode).executeTest();
+        outputValidator.assertTestSuiteResults(36, 23, 4, 2);
+        outputValidator.verifyTextInLog("Tests run: 36, Failures: 4, Errors: 23, Skipped: 2");
     }
 }

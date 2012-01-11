@@ -1,4 +1,5 @@
 package org.apache.maven.surefire.its;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +19,8 @@ package org.apache.maven.surefire.its;
  * under the License.
  */
 
+import org.apache.maven.surefire.its.fixture.SurefireLauncher;
+import org.apache.maven.surefire.its.fixture.SurefireIntegrationTestCase;
 
 /**
  * Basic suite test using all known versions of JUnit 4.x
@@ -25,12 +28,17 @@ package org.apache.maven.surefire.its;
  * @author <a href="mailto:dfabulich@apache.org">Dan Fabulich</a>
  */
 public class Junit4VersionsIT
-    extends SurefireVerifierTestClass
+    extends SurefireIntegrationTestCase
 {
 
     public Junit4VersionsIT()
     {
-        super( "/junit4" );
+        unpack();
+    }
+
+    private SurefireLauncher unpack()
+    {
+        return unpack( "/junit4" );
     }
 
     public void test40()
@@ -91,9 +99,6 @@ public class Junit4VersionsIT
     public void runJUnitTest( String version )
         throws Exception
     {
-        addGoal( "-DjunitVersion=" + version );
-        executeTest();
-        verifyErrorFreeLog();
-        assertTestSuiteResults( 1, 0, 0, 0 );
+        unpack().setJUnitVersion( version ).executeTest().verifyErrorFree(  1 );
     }
 }

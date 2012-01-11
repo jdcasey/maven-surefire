@@ -29,6 +29,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.manipulation.Filter;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
 /**
@@ -62,12 +63,14 @@ class JUnitCoreWrapper
 
             if ( run.getFailureCount() > 0 )
             {
-                // There is something interesting going on here;
-                // the "run" result can contain other exceptions that did not occur as
-                // part of the test run, for instance if something bad happened in the
-                // RunListener. But it also contains regular problems from the test-run.
-                // I am not entirely sure of what to do with this; it might even be
-                // that these errors are the correct errors to report back to the client.
+                for ( Failure failure : run.getFailures() )
+                {
+                    if ( isFailureInsideJUnitItself( failure ) )
+                    {
+                        final Throwable exception = failure.getException();
+                        throw new TestSetFailedException( exception );
+                    }
+                }
             }
         }
         finally
@@ -78,6 +81,11 @@ class JUnitCoreWrapper
                 junitCore.removeListener( runListener );
             }
         }
+    }
+
+    private static boolean isFailureInsideJUnitItself( Failure failure )
+    {
+        return failure.getDescription().getDisplayName().equals( "Test mechanism" );
     }
 
     private static void closeIfConfigurable( Computer computer )
