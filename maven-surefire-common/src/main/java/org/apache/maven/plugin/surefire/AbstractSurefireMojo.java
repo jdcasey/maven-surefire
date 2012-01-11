@@ -388,13 +388,17 @@ public abstract class AbstractSurefireMojo
         {
             if ( isSpecificTestSpecified() )
             {
-                if ( getFailIfNoSpecifiedTests() == null )
+                if ( getFailIfNoSpecifiedTests() != null )
                 {
-                    failIfNoTests = true;
+                    failIfNoTests = getFailIfNoSpecifiedTests().booleanValue();
+                }
+                else if ( getFailIfNoTests() != null )
+                {
+                    failIfNoTests = getFailIfNoTests().booleanValue();
                 }
                 else
                 {
-                    failIfNoTests = getFailIfNoSpecifiedTests().booleanValue();
+                    failIfNoTests = true;
                 }
 
                 setFailIfNoTests( Boolean.valueOf( failIfNoTests ) );
