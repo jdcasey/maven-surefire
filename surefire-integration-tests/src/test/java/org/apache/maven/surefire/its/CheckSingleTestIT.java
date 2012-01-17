@@ -57,6 +57,11 @@ public class CheckSingleTestIT
         assertFalse( "Unexpected reports directory", reportsDir.exists() );
     }
 
+    public void testSingleTestInOneExecutionOfMultiExecutionProject()
+    {
+        unpack( "/default-configuration-multi-exec" ).setTestToRun( "FirstTest" ).addGoal( "-X" ).failIfNoSpecifiedTests( false ).executeTest().verifyErrorFree( 1 );
+    }
+
     private SurefireLauncher unpack()
     {
         return unpack( "/default-configuration" );
