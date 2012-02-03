@@ -19,17 +19,19 @@ package org.apache.maven.plugin.failsafe;
  * under the License.
  */
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
@@ -45,11 +47,15 @@ import org.apache.maven.plugin.surefire.booterclient.ChecksumCalculator;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.surefire.booter.ProviderConfiguration;
 import org.apache.maven.surefire.failsafe.model.FailsafeSummary;
+import org.apache.maven.surefire.failsafe.model.io.xpp3.FailsafeSummaryXpp3Reader;
 import org.apache.maven.surefire.failsafe.model.io.xpp3.FailsafeSummaryXpp3Writer;
 import org.apache.maven.surefire.suite.RunResult;
 import org.apache.maven.toolchain.ToolchainManager;
 import org.codehaus.plexus.util.ReaderFactory;
 import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
+import static org.codehaus.plexus.util.IOUtil.close;
 
 /**
  * Run integration tests using Surefire.
@@ -67,10 +73,12 @@ public class IntegrationTestMojo
     extends AbstractSurefireMojo
 {
 
+    private static final String FAILSAFE_IN_PROGRESS_CONTEXT_KEY = "failsafe-in-progress";
+
     /**
      * Information about this plugin, mainly used to lookup this plugin's configuration from the currently executing
      * project.
-     * 
+     *
      * @parameter default-value="${plugin}"
      * @readonly
      * @since 2.12
@@ -269,7 +277,7 @@ public class IntegrationTestMojo
      * @parameter
      * @since 2.5
      */
-    private Map<String,String> systemPropertyVariables;
+    private Map<String, String> systemPropertyVariables;
 
     /**
      * List of System properties, loaded from a file, to pass to the JUnit tests.
@@ -295,7 +303,7 @@ public class IntegrationTestMojo
      * @required
      * @readonly
      */
-    private Map<String,Artifact> pluginArtifactMap;
+    private Map<String, Artifact> pluginArtifactMap;
 
     /**
      * Map of project artifacts.
@@ -304,7 +312,7 @@ public class IntegrationTestMojo
      * @required
      * @readonly
      */
-    private Map<String,Artifact> projectArtifactMap;
+    private Map<String, Artifact> projectArtifactMap;
 
     /**
      * The summary file to write integration test results to.
@@ -365,7 +373,7 @@ public class IntegrationTestMojo
     /**
      * Set this to "true" to cause a failure if the none of the tests specified in -Dtest=... are run. Defaults to
      * "true".
-     * 
+     *
      * @parameter expression="${it.failIfNoSpecifiedTests}"
      * @since 2.12
      */
@@ -424,7 +432,7 @@ public class IntegrationTestMojo
      * @parameter
      * @since 2.1.3
      */
-    private Map<String,String> environmentVariables = new HashMap<String,String>();
+    private Map<String, String> environmentVariables = new HashMap<String, String>();
 
     /**
      * Command line working directory.
@@ -704,6 +712,7 @@ public class IntegrationTestMojo
         return failsafeSummary;
     }
 
+    @SuppressWarnings( "unchecked" )
     private void writeSummary( FailsafeSummary summary )
         throws MojoExecutionException
     {
@@ -712,21 +721,46 @@ public class IntegrationTestMojo
         {
             summaryFile.getParentFile().mkdirs();
         }
+
+        FileOutputStream fout = null;
+        FileInputStream fin = null;
         try
         {
-            FileOutputStream fileOutputStream = new FileOutputStream( summaryFile );
-            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream( fileOutputStream );
+            FailsafeSummary mergedSummary = summary;
+            Object token = getPluginContext().get( FAILSAFE_IN_PROGRESS_CONTEXT_KEY );
+            if ( summaryFile.exists() && token != null )
+            {
+                fin = new FileInputStream( summaryFile );
+
+                mergedSummary = new FailsafeSummaryXpp3Reader().read(
+                    new InputStreamReader( new BufferedInputStream( fin ), getEncodingOrDefault() ) );
+
+                mergedSummary.merge( summary );
+            }
+
+            fout = new FileOutputStream( summaryFile );
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream( fout );
             Writer writer = new OutputStreamWriter( bufferedOutputStream, getEncodingOrDefault() );
             FailsafeSummaryXpp3Writer xpp3Writer = new FailsafeSummaryXpp3Writer();
-            xpp3Writer.write( writer, summary );
+            xpp3Writer.write( writer, mergedSummary );
             writer.close();
             bufferedOutputStream.close();
-            fileOutputStream.close();
         }
         catch ( IOException e )
         {
             throw new MojoExecutionException( e.getMessage(), e );
         }
+        catch ( XmlPullParserException e )
+        {
+            throw new MojoExecutionException( e.getMessage(), e );
+        }
+        finally
+        {
+            close( fin );
+            close( fout );
+        }
+
+        getPluginContext().put( FAILSAFE_IN_PROGRESS_CONTEXT_KEY, FAILSAFE_IN_PROGRESS_CONTEXT_KEY );
     }
 
     private String getEncodingOrDefault()
@@ -964,12 +998,12 @@ public class IntegrationTestMojo
         this.systemProperties = systemProperties;
     }
 
-    public Map<String,String> getSystemPropertyVariables()
+    public Map<String, String> getSystemPropertyVariables()
     {
         return systemPropertyVariables;
     }
 
-    public void setSystemPropertyVariables( Map<String,String> systemPropertyVariables )
+    public void setSystemPropertyVariables( Map<String, String> systemPropertyVariables )
     {
         this.systemPropertyVariables = systemPropertyVariables;
     }
@@ -994,12 +1028,12 @@ public class IntegrationTestMojo
         this.properties = properties;
     }
 
-    public Map<String,Artifact> getPluginArtifactMap()
+    public Map<String, Artifact> getPluginArtifactMap()
     {
         return pluginArtifactMap;
     }
 
-    public void setPluginArtifactMap( Map<String,Artifact> pluginArtifactMap )
+    public void setPluginArtifactMap( Map<String, Artifact> pluginArtifactMap )
     {
         this.pluginArtifactMap = pluginArtifactMap;
     }
@@ -1134,12 +1168,12 @@ public class IntegrationTestMojo
         this.forkedProcessTimeoutInSeconds = forkedProcessTimeoutInSeconds;
     }
 
-    public Map<String,String> getEnvironmentVariables()
+    public Map<String, String> getEnvironmentVariables()
     {
         return environmentVariables;
     }
 
-    public void setEnvironmentVariables( Map<String,String> environmentVariables )
+    public void setEnvironmentVariables( Map<String, String> environmentVariables )
     {
         this.environmentVariables = environmentVariables;
     }

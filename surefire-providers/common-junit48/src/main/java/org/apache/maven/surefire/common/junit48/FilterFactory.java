@@ -20,12 +20,22 @@ package org.apache.maven.surefire.common.junit48;
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import org.apache.maven.surefire.booter.ProviderParameterNames;
+import org.apache.maven.surefire.group.match.AndGroupMatcher;
+import org.apache.maven.surefire.group.match.GroupMatcher;
+import org.apache.maven.surefire.group.match.InverseGroupMatcher;
+import org.apache.maven.surefire.group.parse.GroupMatcherParser;
+import org.apache.maven.surefire.group.parse.ParseException;
 import org.codehaus.plexus.util.SelectorUtils;
 
-import org.junit.experimental.categories.Categories;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
 import org.junit.runner.manipulation.Filter;
 
@@ -45,29 +55,82 @@ public class FilterFactory
     {
         String groups = providerProperties.getProperty( ProviderParameterNames.TESTNG_GROUPS_PROP );
         String excludedGroups = providerProperties.getProperty( ProviderParameterNames.TESTNG_EXCLUDEDGROUPS_PROP );
-        List<Filter> included = commaSeparatedListToFilters( groups );
-        List<Filter> excluded = commaSeparatedListToFilters( excludedGroups );
-        return new CombinedCategoryFilter( included, excluded );
-    }
 
-    private List<Filter> commaSeparatedListToFilters( String str )
-    {
-        List<Filter> included = new ArrayList<Filter>();
-        if ( str != null )
+        GroupMatcher included = null;
+        if ( groups != null )
         {
-            for ( String group : str.split( "," ) )
+            try
             {
-                group = group.trim();
-                if ( group == null || group.length() == 0)
-                {
-                    continue;
-                }
-                Class<?> categoryType = classloadCategory( group );
-                included.add( Categories.CategoryFilter.include( categoryType ) );
+                included = new GroupMatcherParser( groups ).parse();
+            }
+            catch ( ParseException e )
+            {
+                throw new IllegalArgumentException(
+                    "Invalid group expression: '" + groups + "'. Reason: " + e.getMessage(), e );
             }
         }
-        return included;
+
+        GroupMatcher excluded = null;
+        if ( excludedGroups != null )
+        {
+            try
+            {
+                excluded = new GroupMatcherParser( excludedGroups ).parse();
+            }
+            catch ( ParseException e )
+            {
+                throw new IllegalArgumentException(
+                    "Invalid group expression: '" + excludedGroups + "'. Reason: " + e.getMessage(), e );
+            }
+        }
+
+        // GroupMatcher included = commaSeparatedListToFilters( groups );
+        // GroupMatcher excluded = commaSeparatedListToFilters( excludedGroups );
+
+        if ( included != null && testClassLoader != null )
+        {
+            included.loadGroupClasses( testClassLoader );
+        }
+
+        if ( excluded != null && testClassLoader != null )
+        {
+            excluded.loadGroupClasses( testClassLoader );
+        }
+
+        return new GroupMatcherCategoryFilter( included, excluded );
     }
+
+    // private GroupMatcher commaSeparatedListToFilters( String str )
+    // {
+    // List<GroupMatcher> included = new ArrayList<GroupMatcher>();
+    // if ( str != null )
+    // {
+    // for ( String group : str.split( "," ) )
+    // {
+    // group = group.trim();
+    // if ( group == null || group.length() == 0)
+    // {
+    // continue;
+    // }
+    //
+    // try
+    // {
+    // GroupMatcher matcher = new GroupMatcherParser( group ).parse();
+    // included.add( matcher );
+    // }
+    // catch ( ParseException e )
+    // {
+    // throw new IllegalArgumentException( "Invalid group expression: '" + group + "'. Reason: "
+    // + e.getMessage(), e );
+    // }
+    //
+    // // Class<?> categoryType = classloadCategory( group );
+    // // included.add( Categories.CategoryFilter.include( categoryType ) );
+    // }
+    // }
+    //
+    // return included.isEmpty() ? null : new OrGroupMatcher( included );
+    // }
 
     public Filter createMethodFilter( String requestedTestMethod )
     {
@@ -89,10 +152,11 @@ public class FilterFactory
         {
             for ( Description o : description.getChildren() )
             {
-                if (isDescriptionMatch( o )){
+                if ( isDescriptionMatch( o ) )
+                {
                     return true;
                 }
-                
+
             }
             return isDescriptionMatch( description );
         }
@@ -107,11 +171,122 @@ public class FilterFactory
         @Override
         public String describe()
         {
-            return "By method"  + requestedTestMethod;
+            return "By method" + requestedTestMethod;
         }
     }
 
+    private static class GroupMatcherCategoryFilter
+        extends Filter
+    {
 
+        private AndGroupMatcher matcher;
+
+        private Map<Description, Boolean> shouldRunAnswers = new HashMap<Description, Boolean>();
+
+        public GroupMatcherCategoryFilter( GroupMatcher included, GroupMatcher excluded )
+        {
+            GroupMatcher invertedExclude = excluded == null ? null : new InverseGroupMatcher( excluded );
+            if ( included != null || invertedExclude != null )
+            {
+                matcher = new AndGroupMatcher();
+                if ( included != null )
+                {
+                    matcher.addMatcher( included );
+                }
+
+                if ( invertedExclude != null )
+                {
+                    matcher.addMatcher( invertedExclude );
+                }
+            }
+        }
+
+        @Override
+        public boolean shouldRun( Description description )
+        {
+            return shouldRun( description, ( description.getMethodName() == null
+                ? null
+                : Description.createSuiteDescription( description.getTestClass() ) ) );
+        }
+
+        private boolean shouldRun( Description description, Description parent )
+        {
+            Boolean result = shouldRunAnswers.get( description );
+            if ( result != null )
+            {
+                return result;
+            }
+
+            if ( matcher == null )
+            {
+                return true;
+            }
+
+            // System.out.println( "\n\nMatcher: " + matcher );
+            // System.out.println( "Checking: " + description.getClassName()
+            // + ( parent == null ? "" : "#" + description.getMethodName() ) );
+
+            Set<Class<?>> cats = new HashSet<Class<?>>();
+            Category cat = description.getAnnotation( Category.class );
+            if ( cat != null )
+            {
+                // System.out.println( "Adding categories: " + Arrays.toString( cat.value() ) );
+                cats.addAll( Arrays.asList( cat.value() ) );
+            }
+
+            if ( parent != null )
+            {
+                cat = parent.getAnnotation( Category.class );
+                if ( cat != null )
+                {
+                    // System.out.println( "Adding class-level categories: " + Arrays.toString( cat.value() ) );
+                    cats.addAll( Arrays.asList( cat.value() ) );
+                }
+            }
+
+            // System.out.println( "Checking " + cats.size() + " categories..." );
+            //
+            // System.out.println( "Enabled? " + ( matcher.enabled( cats.toArray( new Class<?>[] {} ) ) ) + "\n\n" );
+            result = matcher.enabled( cats.toArray( new Class<?>[]{ } ) );
+
+            if ( parent == null )
+            {
+                if ( cats.size() == 0 )
+                {
+                    // System.out.println( "Allow method-level filtering by PASSing class-level shouldRun() test..." );
+                    result = true;
+                }
+                else if ( !result )
+                {
+                    ArrayList<Description> children = description.getChildren();
+                    if ( children != null )
+                    {
+                        for ( Description child : children )
+                        {
+                            if ( shouldRun( child, description ) )
+                            {
+                                result = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            shouldRunAnswers.put( description, result );
+            return result == null ? false : result;
+        }
+
+        @Override
+        public String describe()
+        {
+            return matcher == null ? "ANY" : matcher.toString();
+        }
+
+    }
+
+
+    @SuppressWarnings( "unused" )
     private static class CombinedCategoryFilter
         extends Filter
     {
@@ -181,18 +356,6 @@ public class FilterFactory
                 sb.append( f.describe() );
             }
             return sb.toString();
-        }
-    }
-
-    private Class<?> classloadCategory( String category )
-    {
-        try
-        {
-            return testClassLoader.loadClass( category );
-        }
-        catch ( ClassNotFoundException e )
-        {
-            throw new RuntimeException( "Unable to load category: " + category, e );
         }
     }
 

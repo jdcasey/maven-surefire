@@ -25,10 +25,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.maven.surefire.booter.ProviderParameterNames;
 import org.apache.maven.surefire.testset.TestSetFailedException;
 import org.apache.maven.surefire.util.NestedRuntimeException;
+
 import org.testng.TestNG;
 
 public abstract class AbstractDirectConfigurator
@@ -39,8 +39,9 @@ public abstract class AbstractDirectConfigurator
     AbstractDirectConfigurator()
     {
         Map options = new HashMap();
-        options.put( ProviderParameterNames.TESTNG_GROUPS_PROP, new Setter( "setGroups", String.class ) );
-        options.put( ProviderParameterNames.TESTNG_EXCLUDEDGROUPS_PROP, new Setter( "setExcludedGroups", String.class ) );
+        // options.put( ProviderParameterNames.TESTNG_GROUPS_PROP, new Setter( "setGroups", String.class ) );
+        // options.put( ProviderParameterNames.TESTNG_EXCLUDEDGROUPS_PROP, new Setter( "setExcludedGroups", String.class
+        // ) );
         options.put( "junit", new Setter( "setJUnit", Boolean.class ) );
         options.put( ProviderParameterNames.THREADCOUNT_PROP, new Setter( "setThreadCount", int.class ) );
         options.put( "usedefaultlisteners", new Setter( "setUseDefaultListeners", boolean.class ) );
@@ -50,6 +51,7 @@ public abstract class AbstractDirectConfigurator
     public void configure( TestNG testng, Map options )
         throws TestSetFailedException
     {
+        System.out.println( "\n\n\n\nCONFIGURING TESTNG\n\n\n\n" );
         // kind of ugly, but listeners are configured differently
         final String listeners = (String) options.remove( "listener" );
         // DGF In 4.7, default listeners dump XML files in the surefire-reports directory,
@@ -127,10 +129,10 @@ public abstract class AbstractDirectConfigurator
         public void invoke( Object target, Object value )
             throws Exception
         {
-            Method setter = target.getClass().getMethod( this.setterName, new Class[] { this.paramClass } );
+            Method setter = target.getClass().getMethod( this.setterName, new Class[]{ this.paramClass } );
             if ( setter != null )
             {
-                setter.invoke( target, new Object[] { convertValue( value ) } );
+                setter.invoke( target, new Object[]{ convertValue( value ) } );
             }
         }
 

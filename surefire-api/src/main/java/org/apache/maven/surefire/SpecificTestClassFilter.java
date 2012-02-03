@@ -3,7 +3,6 @@ package org.apache.maven.surefire;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.apache.maven.surefire.util.ScannerFilter;
 import org.codehaus.plexus.util.SelectorUtils;
 
@@ -38,7 +37,6 @@ public class SpecificTestClassFilter
         if ( names != null && !names.isEmpty() )
         {
             String className = testClass.getName().replace( '.', FS ) + JAVA_CLASS_FILE_EXTENSION;
-            System.out.println( "Checking classname: '" + className + "' against patterns:\n\n" + names + "\n\n" );
 
             boolean found = false;
             for ( Iterator it = names.iterator(); it.hasNext(); )
@@ -60,7 +58,6 @@ public class SpecificTestClassFilter
             }
         }
 
-        System.out.println( "Accepted? " + result );
         return result;
     }
 
